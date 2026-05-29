@@ -1,7 +1,9 @@
-build:
-	docker buildx build --platform linux/amd64,linux/arm64 -t overvenus/corplink:latest .
+DOCKER_IMAGE ?= ghcr.io/moonsphere/corplink-headless:latest
 
-LIMA_TEMPLATE := github:overvenus/corplink-headless/lima/corplink-headless
+build:
+	docker buildx build --platform linux/amd64,linux/arm64 -t "$(DOCKER_IMAGE)" .
+
+LIMA_TEMPLATE := github:moonsphere/corplink-headless/lima/corplink-headless
 LIMA_INSTANCE ?= corplink-headless
 
 macos-up:

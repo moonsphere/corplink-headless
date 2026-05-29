@@ -21,7 +21,7 @@ docker run -d \
   -p 8888:8118 \
   -p 1088:1080 \
   -e COMPANY_CODE="your_company" \
-  overvenus/corplink:latest
+  ghcr.io/moonsphere/corplink-headless:latest
 ```
 
 2. Configure corplink.
@@ -50,13 +50,13 @@ brew install lima
 ```bash
 limactl start \
   --set '.param.COMPANY_CODE="your_company"' \
-  github:overvenus/corplink-headless/lima/corplink-headless
+  github:moonsphere/corplink-headless/lima/corplink-headless
 ```
 
 This command will:
 
 - Start an Ubuntu Minimal arm64 VM with Apple Virtualization (`vmType: vz`)
-- Download the latest arm64 runtime bundle published from Git tags
+- Download the latest arm64 runtime bundle published from Git tags, or build it from this fork if release assets are unavailable
 - Download the official arm64 Corplink package
 - Install the same runtime stack as the Docker image inside the guest
 - Expose host proxies on `127.0.0.1:8888` and `127.0.0.1:1088`
@@ -65,6 +65,8 @@ Notes:
 
 - The `github:` template scheme requires Lima 2.x.
 - If GitHub API rate limits affect template resolution, set `GH_TOKEN` or `GITHUB_TOKEN` before running `limactl`.
+- Source-build fallback uses `RUNTIME_REPO=moonsphere/corplink-headless` and `RUNTIME_SOURCE_REF=main` by default. Override them with `--set` if you want to test another fork, branch, tag, or commit.
+- If the source-build fallback cannot reach Go's default download or module endpoints, set `GO_DOWNLOAD_BASES` or `GOPROXY` with `--set`.
 
 ### Login and daily operations
 

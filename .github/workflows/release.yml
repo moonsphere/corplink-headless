@@ -5,14 +5,19 @@ on:
     tags:
       - "*"
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag to create or update"
+        required: true
+        type: string
 
 permissions:
   contents: write
   packages: write
 
 env:
-  DOCKERHUB_IMAGE: overvenus/corplink
   GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/corplink-headless
+  RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
 
 jobs:
   docker-image:
@@ -36,21 +41,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Extract image metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: |
-            ${{ env.DOCKERHUB_IMAGE }}
-            ${{ env.GHCR_IMAGE }}
+          images: ${{ env.GHCR_IMAGE }}
           tags: |
-            type=ref,event=tag
+            type=raw,value=${{ env.RELEASE_TAG }}
             type=raw,value=latest
 
       - name: Build and push multi-arch image
@@ -91,7 +88,7 @@ jobs:
             "${{ matrix.arch }}" \
             "dist/corplink-headless-runtime-linux-${{ matrix.arch }}.tar.gz"
         env:
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ env.RELEASE_TAG }}
 
       - name: Upload runtime tarball
         uses: actions/upload-artifact@v4
@@ -101,7 +98,6 @@ jobs:
 
   github-release:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
     needs:
       - runtime-bundles
     steps:
@@ -119,8 +115,10 @@ jobs:
       - name: Publish release assets
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          target_commitish: ${{ github.sha }}
           generate_release_notes: true
+          make_latest: true
           overwrite_files: true
           files: |
             dist/*.tar.gz

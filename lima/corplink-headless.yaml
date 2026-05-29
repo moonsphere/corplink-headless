@@ -23,6 +23,11 @@ hostResolver:
 
 param:
   COMPANY_CODE: ""
+  RUNTIME_REPO: "moonsphere/corplink-headless"
+  RUNTIME_RELEASE: "latest"
+  RUNTIME_SOURCE_REF: "main"
+  GO_DOWNLOAD_BASES: "https://go.dev/dl https://mirrors.aliyun.com/golang"
+  GOPROXY: ""
 
 message: |
   Corplink headless is installed in the "{{.Name}}" Lima instance.
