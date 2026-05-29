@@ -47,7 +47,7 @@ fetch_release_runtime() {
         return 1
     fi
 
-    expected_checksum="$(awk -v asset="${RUNTIME_ASSET}" '$2 == asset { print $1; exit }' "${CHECKSUMS_PATH}")"
+    expected_checksum="$(awk -v asset="${RUNTIME_ASSET}" '{ entry = $2; sub(/^.*\//, "", entry); if (entry == asset) { print $1; exit } }' "${CHECKSUMS_PATH}")"
     if [ -z "${expected_checksum}" ]; then
         echo "Checksum file does not contain ${RUNTIME_ASSET}; falling back to source build" >&2
         return 1
@@ -66,7 +66,7 @@ fetch_release_runtime() {
         fi
     fi
 
-    if ! (cd "${RELEASE_DIR}" && grep " ${RUNTIME_ASSET}\$" "${CHECKSUMS_PATH}" | sha256sum -c -); then
+    if ! (cd "${RELEASE_DIR}" && printf '%s  %s\n' "${expected_checksum}" "${RUNTIME_ASSET}" | sha256sum -c -); then
         echo "Runtime checksum verification failed" >&2
         exit 1
     fi
@@ -74,7 +74,7 @@ fetch_release_runtime() {
 }
 
 build_runtime_from_source() {
-    local safe_ref source_dir source_tar source_url go_version go_root go_tar
+    local safe_ref source_dir source_tar source_url go_version go_root go_tar go_path go_mod_cache go_build_cache
 
     safe_ref="${RUNTIME_SOURCE_REF//\//-}"
     source_dir="${RELEASE_DIR}/source"
@@ -95,14 +95,22 @@ build_runtime_from_source() {
 
     go_root="${RELEASE_DIR}/go"
     go_tar="${RELEASE_DIR}/go${go_version}.linux-arm64.tar.gz"
+    go_path="${RELEASE_DIR}/gopath"
+    go_mod_cache="${go_path}/pkg/mod"
+    go_build_cache="${RELEASE_DIR}/go-build-cache"
     rm -rf "${go_root}"
     download_go_toolchain "${go_version}" "${go_tar}"
     tar -xzf "${go_tar}" -C "${RELEASE_DIR}"
+    mkdir -p "${go_mod_cache}" "${go_build_cache}"
 
     (
         cd "${source_dir}"
+        export HOME="/root"
         export PATH="${go_root}/bin:${PATH}"
         export GOROOT="${go_root}"
+        export GOPATH="${go_path}"
+        export GOMODCACHE="${go_mod_cache}"
+        export GOCACHE="${go_build_cache}"
         if [ -n "${GOPROXY_VALUE}" ]; then
             export GOPROXY="${GOPROXY_VALUE}"
         fi
@@ -114,7 +122,7 @@ build_runtime_from_source() {
     install -m 0755 "${source_dir}/scripts/startup.sh" "${RELEASE_DIR}/startup.sh"
     printf '%s\n' "${RUNTIME_SOURCE_REF}" >"${RELEASE_DIR}/VERSION"
 
-    rm -rf "${source_dir}" "${go_root}" "${go_tar}" "${source_tar}" /root/.cache/go-build /root/go/pkg/mod
+    rm -rf "${source_dir}" "${go_root}" "${go_tar}" "${source_tar}" "${go_path}" "${go_build_cache}" /root/.cache/go-build /root/go/pkg/mod
 }
 
 download_go_toolchain() {

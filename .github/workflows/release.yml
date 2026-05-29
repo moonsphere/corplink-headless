@@ -110,7 +110,7 @@ jobs:
 
       - name: Generate checksums
         run: |
-          (cd dist && sha256sum ./*.tar.gz > corplink-headless-runtime-sha256sum.txt)
+          (cd dist && sha256sum *.tar.gz > corplink-headless-runtime-sha256sum.txt)
 
       - name: Publish release assets
         uses: softprops/action-gh-release@v2
