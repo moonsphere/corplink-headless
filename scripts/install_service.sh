@@ -198,18 +198,32 @@ EOF
 #!/bin/bash
 set -x
 tmp_file="/tmp/resolv.conf.corplink"
+base_file="/tmp/resolv.conf.corplink.base"
+
+if [[ ! -s "\${base_file}" ]]; then
+  if [[ -s /run/systemd/resolve/resolv.conf ]]; then
+    cp /run/systemd/resolve/resolv.conf "\${base_file}"
+  else
+    cp /etc/resolv.conf "\${base_file}"
+  fi
+fi
+
 while true; do
   sleep 5
   dns=\$(jq -r '.DNS[0] // empty' /opt/Corplink/vpn.conf 2>/dev/null)
-  {
-    if [[ -n "\$dns" && "\$dns" != "114.114.114.114" && "\$dns" != "1.1.1.1" ]]; then
+  if [[ -n "\$dns" && "\$dns" != "114.114.114.114" && "\$dns" != "1.1.1.1" ]]; then
+    {
       echo "nameserver \${dns}"
-    fi
-    # Always keep deterministic fallback DNS entries regardless of Feilian state.
-    echo "nameserver 114.114.114.114"
-    echo "nameserver 1.1.1.1"
-  } >"\${tmp_file}"
+      echo "nameserver 114.114.114.114"
+      echo "nameserver 1.1.1.1"
+    } >"\${tmp_file}"
+  else
+    cat "\${base_file}" >"\${tmp_file}"
+  fi
   cmp -s "\${tmp_file}" /etc/resolv.conf && continue
+  if [[ -L /etc/resolv.conf ]]; then
+    rm -f /etc/resolv.conf
+  fi
   cat "\${tmp_file}" >/etc/resolv.conf
 done
 EOF
