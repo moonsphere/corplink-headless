@@ -65,6 +65,7 @@ Notes:
 
 - The `github:` template scheme requires Lima 2.x.
 - If GitHub API rate limits affect template resolution, set `GH_TOKEN` or `GITHUB_TOKEN` before running `limactl`.
+- The template downloads the latest release by default. For reproducible VM setup, pin a known-good runtime release with `--set '.param.RUNTIME_RELEASE="v0.1.0-moonsphere.3"'`.
 - Source-build fallback uses `RUNTIME_REPO=moonsphere/corplink-headless` and `RUNTIME_SOURCE_REF=main` by default. Override them with `--set` if you want to test another fork, branch, tag, or commit.
 - If the source-build fallback cannot reach Go's default download or module endpoints, set `GO_DOWNLOAD_BASES` or `GOPROXY` with `--set`.
 
