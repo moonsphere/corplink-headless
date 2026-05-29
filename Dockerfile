@@ -28,7 +28,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -o /out/corplink-head
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -o /out/socks5 ./cmd/socks5
 
 # Stage 2: Final image
-FROM --platform=$TARGETPLATFORM ubuntu:20.04
+FROM ubuntu:20.04
 
 ENV CONTAINER=1
 

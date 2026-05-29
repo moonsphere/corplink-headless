@@ -30,7 +30,7 @@ shell_quote() {
 }
 
 ensure_hostname_resolution() {
-    [ "${CORPLINK_RUNTIME:-}" = "vm" ] || return
+    [ "${CORPLINK_RUNTIME:-}" = "vm" ] || return 0
 
     local host_name short_name
     host_name="$(hostname)"
@@ -117,7 +117,7 @@ install_runtime_artifacts() {
 }
 
 install_startup_script() {
-    [ "${CORPLINK_RUNTIME:-}" = "vm" ] || return
+    [ "${CORPLINK_RUNTIME:-}" = "vm" ] || return 0
 
     if [ -n "${CORPLINK_STARTUP_SCRIPT:-}" ]; then
         require_file "${CORPLINK_STARTUP_SCRIPT}"
@@ -132,7 +132,7 @@ install_startup_script() {
 }
 
 disable_conflicting_systemd_units() {
-    [ "${CORPLINK_RUNTIME:-}" = "vm" ] || return
+    [ "${CORPLINK_RUNTIME:-}" = "vm" ] || return 0
     command -v systemctl >/dev/null 2>&1 || return
 
     local unit
@@ -249,7 +249,7 @@ EOF
 }
 
 write_vm_runtime_files() {
-    [ "${CORPLINK_RUNTIME:-}" = "vm" ] || return
+    [ "${CORPLINK_RUNTIME:-}" = "vm" ] || return 0
 
     local escaped_company_code
     escaped_company_code="$(shell_quote "${COMPANY_CODE:-}")"
@@ -282,7 +282,7 @@ EOF
 }
 
 enable_vm_runtime() {
-    [ "${CORPLINK_RUNTIME:-}" = "vm" ] || return
+    [ "${CORPLINK_RUNTIME:-}" = "vm" ] || return 0
     command -v systemctl >/dev/null 2>&1 || return
 
     systemctl daemon-reload
